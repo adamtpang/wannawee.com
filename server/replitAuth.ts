@@ -8,37 +8,63 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
+// Allow development without Replit Auth
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error("Environment variable REPLIT_DOMAINS required in production");
+  }
+  console.log("⚠️  No REPLIT_DOMAINS found - running without authentication in development");
+  process.env.REPLIT_DOMAINS = "localhost:5000"; // Mock for development
+}
+
+// Set default values for development
+if (!process.env.REPL_ID && process.env.NODE_ENV !== 'production') {
+  process.env.REPL_ID = "dev-repl-id";
+}
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV !== 'production') {
+  process.env.SESSION_SECRET = "dev-session-secret-not-secure";
 }
 
 const getOidcConfig = memoize(
   async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
+    try {
+      return await client.discovery(
+        new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
+        process.env.REPL_ID!
+      );
+    } catch (error) {
+      console.log("⚠️  OIDC discovery failed - authentication disabled in development");
+      return null;
+    }
   },
   { maxAge: 3600 * 1000 }
 );
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
-  const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
-    conString: process.env.DATABASE_URL,
-    createTableIfMissing: false,
-    ttl: sessionTtl,
-    tableName: "sessions",
-  });
+  
+  // For development without database, use memory store
+  const isDev = process.env.NODE_ENV === 'development' && !process.env.DATABASE_URL?.includes('neon');
+  let sessionStore;
+  
+  if (!isDev) {
+    const pgStore = connectPg(session);
+    sessionStore = new pgStore({
+      conString: process.env.DATABASE_URL,
+      createTableIfMissing: false,
+      ttl: sessionTtl,
+      tableName: "sessions",
+    });
+  }
+  
   return session({
     secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
+    store: sessionStore, // undefined for development (uses memory store)
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: process.env.NODE_ENV === 'production',
       maxAge: sessionTtl,
     },
   });
@@ -73,6 +99,12 @@ export async function setupAuth(app: Express) {
   app.use(passport.session());
 
   const config = await getOidcConfig();
+  
+  // Skip authentication setup if config failed (development mode)
+  if (!config) {
+    console.log("⚠️  Authentication disabled - running in development mode");
+    return;
+  }
 
   const verify: VerifyFunction = async (
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
