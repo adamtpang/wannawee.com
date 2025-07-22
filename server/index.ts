@@ -1,6 +1,18 @@
+console.log("🚀 Starting WannaWee server...");
+console.log("📍 Current working directory:", process.cwd());
+console.log("🌍 NODE_ENV:", process.env.NODE_ENV);
+
 import express, { type Request, Response, NextFunction } from "express";
+
+console.log("✅ Express imported");
+
 import { registerRoutes } from "./routes";
+
+console.log("✅ Routes imported");
+
 import { setupVite, serveStatic, log } from "./vite";
+
+console.log("✅ Vite utils imported");
 
 const app = express();
 app.use(express.json());
@@ -50,9 +62,14 @@ app.use((req, res, next) => {
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
+  console.log("🔍 App environment:", app.get("env"));
+  console.log("🔍 NODE_ENV:", process.env.NODE_ENV);
+  
   if (app.get("env") === "development") {
+    console.log("🔧 Starting development mode with Vite...");
     await setupVite(app, server);
   } else {
+    console.log("🏭 Starting production mode with static files...");
     serveStatic(app);
   }
 

@@ -22,8 +22,7 @@ export function log(message: string, source = "express") {
 }
 
 export async function setupVite(app: Express, server: Server) {
-  // Only import vite config in development mode
-  const { default: viteConfig } = await import("../vite.config");
+  console.log("🔧 Setting up Vite in development mode...");
   
   const serverOptions = {
     middlewareMode: true,
@@ -32,8 +31,7 @@ export async function setupVite(app: Express, server: Server) {
   };
 
   const vite = await createViteServer({
-    ...viteConfig,
-    configFile: false,
+    configFile: "../vite.config.ts",
     customLogger: {
       ...viteLogger,
       error: (msg, options) => {
@@ -72,19 +70,25 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // Use process.cwd() for consistent path resolution in all builds
+  console.log("📁 Setting up static file serving...");
+  
   const distPath = path.resolve(process.cwd(), "dist/public");
+  console.log("📍 Static files path:", distPath);
 
   if (!fs.existsSync(distPath)) {
+    console.error("❌ Build directory not found:", distPath);
     throw new Error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`,
     );
   }
 
+  console.log("✅ Static files directory exists");
   app.use(express.static(distPath));
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
     res.sendFile(path.resolve(distPath, "index.html"));
   });
+  
+  console.log("✅ Static file serving configured");
 }
