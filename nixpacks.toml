@@ -1,8 +1,8 @@
 [phases.build]
-cmds = ["npm ci", "npm run build"]
+cmds = ["npm install", "npm run build"]
 
 [phases.start]
-cmd = "node start-production.js"
+cmd = "NODE_ENV=production tsx server/index.ts"
 
 [variables]
 NODE_VERSION = "18"
