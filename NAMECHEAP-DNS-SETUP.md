@@ -1,6 +1,6 @@
 # 🌐 NAMECHEAP DNS SETUP FOR WANNAWEE.COM
 
-## **Railway URL:** `pkg1zc2k.up.railway.app`
+## **Railway URL:** `ugxdnqy0.up.railway.app`
 
 ---
 
@@ -23,13 +23,13 @@
 ### **Record 1:**
 - **Type:** CNAME Record
 - **Host:** @
-- **Value:** `pkg1zc2k.up.railway.app`
+- **Value:** `ugxdnqy0.up.railway.app`
 - **TTL:** Automatic
 
 ### **Record 2:**
 - **Type:** CNAME Record
 - **Host:** www
-- **Value:** `pkg1zc2k.up.railway.app`
+- **Value:** `ugxdnqy0.up.railway.app`
 - **TTL:** Automatic
 
 ---
