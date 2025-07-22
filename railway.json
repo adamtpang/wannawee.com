@@ -4,7 +4,7 @@
     "builder": "NIXPACKS"
   },
   "deploy": {
-    "startCommand": "node start-production.js",
+    "startCommand": "NODE_ENV=production tsx server/index.ts",
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10
   }
