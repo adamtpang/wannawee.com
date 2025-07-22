@@ -2,7 +2,7 @@
 cmds = ["npm ci", "npm run build"]
 
 [phases.start]
-cmd = "npm start"
+cmd = "NODE_ENV=production tsx server/index.ts"
 
 [variables]
 NODE_VERSION = "18"
