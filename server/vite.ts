@@ -7,9 +7,7 @@ import { type Server } from "http";
 import viteConfig from "../vite.config";
 import { nanoid } from "nanoid";
 
-// Fix for ES modules - get __dirname equivalent
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Use process.cwd() for consistent path resolution in production builds
 
 const viteLogger = createLogger();
 
@@ -51,8 +49,7 @@ export async function setupVite(app: Express, server: Server) {
 
     try {
       const clientTemplate = path.resolve(
-        __dirname,
-        "..",
+        process.cwd(),
         "client",
         "index.html",
       );
@@ -73,10 +70,8 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  // In production builds, use process.cwd() to find the dist folder
-  const distPath = process.env.NODE_ENV === "production" 
-    ? path.resolve(process.cwd(), "dist/public")
-    : path.resolve(__dirname, "../dist/public");
+  // Use process.cwd() for consistent path resolution in all builds
+  const distPath = path.resolve(process.cwd(), "dist/public");
 
   if (!fs.existsSync(distPath)) {
     throw new Error(
